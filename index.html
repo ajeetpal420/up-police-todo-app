@@ -1,288 +1,421 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>UP Police कार्य प्रबंधन प्रणाली</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #f0f5ff, #e0e7ff);
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
+<meta charset="UTF-8" />
+<title>उत्तर प्रदेश पुलिस कर्मचारी सूची</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  body {
+    background: linear-gradient(135deg, #f7f7fd 0%, #e1ecf5 100%);
+    margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  .container {
+    max-width: 900px;
+    margin: 30px auto;
+    background: white;
+    padding: 30px 20px;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(121,119,186,0.66);
+  }
+  h2 {
+    text-align: center;
+    color: #26325f;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px #c9d9fd6e;
+  }
+  .filters {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 28px;
+  }
+  select, input[type=text] {
+    font-size: 17px;
+    border: none;
+    border-bottom: 2px solid #b9c6de;
+    padding: 10px 18px;
+    border-radius: 8px 8px 0 0;
+    background: #f0f6ff;
+    outline: none;
+    min-width: 180px;
+    transition: 0.2s;
+  }
+  select:focus, input[type=text]:focus {
+    border-bottom: 2.5px solid #699bf7;
+    background: #e6f1ff;
+  }
+  button {
+    background: linear-gradient(91deg,#5472ef 10%, #32b9d7 100%);
+    border: none;
+    padding: 11px 38px;
+    border-radius: 24px;
+    font-size: 17px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px #c9dbe8a9;
+    transition: 0.14s;
+    margin-left: 10px;
+  }
+  button:hover {
+    background: linear-gradient(91deg,#4360d5 10%, #2796ad 100%);
+    letter-spacing: 1.5px;
+  }
+  .cards-area {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
+    grid-gap: 20px;
+  }
+  .police-card {
+    background: linear-gradient(120deg,#f5faff 65%,#eff1fa 100%);
+    border-radius: 16px;
+    box-shadow: 0 2px 14px #cac2fb38;
+    padding: 25px 22px 19px 22px;
+    color: #14233cda;
+    font-size: 16px;
+    border: 2px solid #e6e7f2;
+    transition: box-shadow 0.18s, transform 0.18s;
+    position: relative;
+  }
+  .police-card:hover {
+    box-shadow: 0 6px 30px #4270ff2a;
+    transform: translateY(-3px) scale(1.02);
+    border-color: #b2d3fd;
+  }
+  .police-card .name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #3a53a6;
+    margin-bottom: 3px;
+  }
+  .row {
+    margin: 6px 0;
+  }
+  .label {
+    color: #587dac;
+    font-weight: 600;
+  }
+  .pno-link {
+    cursor: pointer;
+    color: #1877f2;
+    font-weight: 600;
+    text-decoration: underline dotted #8ac1f5;
+    text-underline-position: under;
+    letter-spacing: 1px;
+    transition: 0.15s;
+  }
+  .pno-link:hover {
+    color: #054de9;
+    text-decoration-thickness: 3px;
+  }
+  .message {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 18px;
+    color: #555;
+  }
+  @media(max-width: 570px) {
     .container {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 100, 0.1);
-      border: 1px solid #0056b3;
+      padding: 20px 12px;
     }
-    header {
-      text-align: center;
-      padding: 15px;
-      background: #003366;
-      color: white;
-      border-radius: 10px 10px 0 0;
-      margin: -20px -20px 20px -20px;
+    h2 {
+      font-size: 22px;
     }
-    header h1 {
-      margin: 0;
-      font-size: 28px;
-    }
-    .logo {
-      width: 80px;
-      margin-bottom: 10px;
-    }
-    .auth-section, .app-section {
-      text-align: center;
-    }
-    input, button, select {
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      width: 80%;
-      max-width: 300px;
-    }
-    button {
-      background: #d42323;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button:hover {
-      background: #b01c1c;
-    }
-    .task-card {
-      padding: 12px;
-      margin: 10px 0;
-      background: #f8f9ff;
-      border-left: 5px solid #0056b3;
-      border-radius: 6px;
-      text-align: left;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    .task-card.high {
-      border-left-color: #d42323;
-    }
-    .task-card.completed {
-      background: #e8f5e8;
-      opacity: 0.8;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      color: #555;
-      font-size: 14px;
-    }
-    .tabs {
-      display: flex;
-      justify-content: center;
-      margin: 20px 0;
-    }
-    .tab {
-      padding: 10px 20px;
-      margin: 0 5px;
-      background: #e0e7ff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .tab.active {
-      background: #003366;
-      color: white;
-    }
-    .logout {
-      background: #6c757d !important;
-    }
-    .timestamp {
-      font-size: 12px;
-      color: #666;
-      margin-top: 5px;
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
-
 <div class="container">
-  <header>
-    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Emblem_of_Uttar_Pradesh.svg/1200px-Emblem_of_Uttar_Pradesh.svg.png" alt="UP Police Logo" class="logo" />
-    <h1>उत्तर प्रदेश पुलिस - कार्य प्रबंधन प्रणाली</h1>
-  </header>
-
-  <!-- Authentication Section -->
-  <div id="authSection" class="auth-section">
-    <h2>कर्मचारी लॉगिन / साइन अप</h2>
-    <input type="email" id="email" placeholder="ईमेल (आईडी)" />
-    <input type="password" id="password" placeholder="पासवर्ड" />
-    <button onclick="register()">साइन अप</button>
-    <button onclick="login()">लॉगिन</button>
-    <p id="authStatus"></p>
-  </div>
-
-  <!-- App Section (Hidden until login) -->
-  <div id="appSection" class="app-section" style="display: none;">
-    <h2>नया कार्य जोड़ें</h2>
-    <input type="text" id="taskTitle" placeholder="कार्य का शीर्षक" />
-    <input type="text" id="taskDesc" placeholder="विवरण (वैकल्पिक)" />
-    <select id="priority">
-      <option value="Low">कम प्राथमिकता</option>
-      <option value="Medium">मध्यम प्राथमिकता</option>
-      <option value="High">उच्च प्राथमिकता</option>
+  <h2>उत्तर प्रदेश पुलिस कर्मचारी सूची<br><span style="font-weight: 500; font-size: 15px; color:#174685b2;">(उ0प्र0 पुलिस ,आंकिक/सहायक आंकिक विवरण)</span></h2>
+  <div class="filters" role="region" aria-label="Filters">
+    <select id="districtSelect" aria-label="District Filter">
+      <option value="">जनपद (Posting District)</option>
     </select>
-    <button onclick="addTask()">कार्य जोड़ें</button>
-    <button class="logout" onclick="logout()">लॉग आउट</button>
 
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('all')">सभी कार्य</button>
-      <button class="tab" onclick="showTab('pending')">लंबित कार्य</button>
-      <button class="tab" onclick="showTab('completed')">पूर्ण कार्य</button>
-    </div>
+    <select id="rankSelect" aria-label="Rank Filter">
+      <option value="">पद (Rank)</option>
+    </select>
 
-    <div id="taskList"></div>
+    <input type="text" id="searchBox" placeholder="नाम / PNO / मोबाइल " aria-label="Search Employees" />
+    <button id="showListBtn" aria-label="Search Button">खोजें</button>
   </div>
-
-  <div class="footer">
-    © 2025 UP Police - डिजिटल कार्य प्रबंधन प्रणाली। केवल आंतरिक उपयोग के लिए।
-  </div>
+  <div id="result" aria-live="polite" aria-atomic="true"></div>
+  <div id="message" class="message" role="alert" aria-live="assertive">कृपया जनपद चुनें।</div>
 </div>
 
 <script>
-  // Firebase Configuration (Replace with your own Firebase project)
-  const firebaseConfig = {
-  apiKey: "AIzaSyCcfFVoG6ixSCzHWJ_aEofa6l89lQy0IdM",
-  authDomain: "up-police-todo-app.firebaseapp.com",
-  projectId: "up-police-todo-app",
-  storageBucket: "up-police-todo-app.firebasestorage.app",
-  messagingSenderId: "772303355094",
-  appId: "1:772303355094:web:a73f897b17a08d82649d77"
-};
-  
-// Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+const employees = [
+  {"Rank":"ASI","Name":"Sunny Choudhary","PNo":"230450024","District":"Saharanpur","Unit":"Saharanpur","Mobile":"8899655552"},
+  {"Rank":"ASI","Name":"Dipankar","PNo":"230450037","District":"Sitapur","Unit":"ATC SITAPUR","Mobile":"7080101760"},
+  {"Rank":"ASI","Name":"अखिलेश कुमार","PNo":"230450040","District":"अयोध्या","Unit":"SSP AYODHYA","Mobile":"9161901222"},
+  {"Rank":"ASI","Name":"मौ० सज्जाद","PNo":"230450053","District":"बदायूँ","Unit":"SSP BADAUN","Mobile":"9917607765"},
+  {"Rank":"ASI","Name":"Ajay Sahani","PNo":"230450066","District":"Varanasi","Unit":"Commissinorate","Mobile":"9005642975"},
+  {"Rank":"ASI","Name":"विकास वर्मा","PNo":"230450079","District":"सुल्तानपुर","Unit":"SP SULTANPUR","Mobile":"7007642341"},
+  {"Rank":"ASI","Name":"अर्पित कस्तवार","PNo":"230450082","District":"KANPUR","Unit":"COM. KANPUR","Mobile":"7408189028"},
+  {"Rank":"ASI","Name":"सर्वेश गुप्ता","PNo":"230450095","District":"मिर्जापुर","Unit":"SP MIRZAPUR","Mobile":"9616984261"},
+  {"Rank":"ASI","Name":"अनिल कुमार","PNo":"230450109","District":"बहराइच","Unit":"SP BEHIRAICH","Mobile":"9889229788"},
+  {"Rank":"ASI","Name":"Shivam Gupta","PNo":"230450112","District":"Lucknow","Unit":"Comis. Lucknow","Mobile":"9415412342"},
+  {"Rank":"ASI","Name":"Avnish Kumar Yadav","PNo":"230450125","District":"Prayagraj","Unit":"Comis. Prayagraj","Mobile":"8115493321"},
+  {"Rank":"ASI","Name":"Priyam Gupta","PNo":"230450138","District":"DIRECTOR GENERAL OF POLICE UP","Unit":"DIRECTOR GENERAL OF POLICE UP","Mobile":"8687286950"},
+  {"Rank":"ASI","Name":"Aram Khan","PNo":"230450141","District":"Lucknow","Unit":"Phq Lucknow","Mobile":"9557346101"},
+  {"Rank":"ASI","Name":"Nikhil Gupta","PNo":"230450154","District":"Lucknow","Unit":"Phq Lucknow","Mobile":"888780925"},
+  {"Rank":"ASI","Name":"Ravindra Kumar","PNo":"230450167","District":"Knapur","Unit":"Comis. Kanpur","Mobile":"9721534496"},
+  {"Rank":"ASI","Name":"Anirl Bharti","PNo":"230450170","District":"Fatehpur","Unit":"FATEHPUR","Mobile":"7844052802"},
+  {"Rank":"ASI","Name":"Anuj","PNo":"230450183","District":"KANPUR","Unit":"Comis. Kanpur","Mobile":"8303098302"},
+  {"Rank":"ASI","Name":"Vipin","PNo":"230450196","District":"मिर्जापुर","Unit":"SP MIRZAPUR","Mobile":"9615479828"},
+  {"Rank":"ASI","Name":"Vivek Sagar","PNo":"230450200","District":"Prayagraj","Unit":"Comis. Prayagraj","Mobile":"8318590706"},
+  {"Rank":"ASI","Name":"Puspendra","PNo":"230450213","District":"Raebareli","Unit":"SP RAEBARELI","Mobile":"9634049196"},
+  {"Rank":"ASI","Name":"Abhishek Shahu","PNo":"230450226","District":"Mahoba","Unit":"MAHOBA","Mobile":"8787059133"},
+  {"Rank":"ASI","Name":"Manish Kumar","PNo":"230450239","District":"Bulandshahr","Unit":"SSP BULANDSHAHAR","Mobile":"6206815872"},
+  {"Rank":"ASI","Name":"Ranjeet Kumar","PNo":"230450242","District":"Amethi","Unit":"SP AMETHI","Mobile":"9044853134"},
+  {"Rank":"ASI","Name":"Pradeep Kumar","PNo":"230450255","District":"Lucknow","Unit":"Comis. Lucknow","Mobile":"7880833743"},
+  {"Rank":"ASI","Name":"Utkarsh Kumar Verma","PNo":"230450268","District":"Lucknow","Unit":"PHQ Lucknow","Mobile":"7836045175"},
+  {"Rank":"ASI","Name":"Anmol Malviya","PNo":"230450271","District":"Lucknow","Unit":"Comis. Lucknow","Mobile":"8957984146"},
+  {"Rank":"ASI","Name":"Vinay Pratap Singh","PNo":"230450284","District":"Lucknow","Unit":"DIRECTOR GENERAL OF POLICE UP","Mobile":"8840059560"},
+  {"Rank":"ASI","Name":"Amit Mishra","PNo":"230450297","District":"Banda","Unit":"BANDA","Mobile":"9616984927"},
+  {"Rank":"ASI","Name":"Sandeep Yadav","PNo":"230450301","District":"Banda","Unit":"BANDA","Mobile":"8960035835"},
+  {"Rank":"ASI","Name":"Mukul Chaudhary","PNo":"230450314","District":"Amroha","Unit":"SP AMROHA","Mobile":"9870934293"},
+  {"Rank":"ASI","Name":"Rajneesh Mishra","PNo":"230450327","District":"Balrampur","Unit":"SP BALRAMPUR","Mobile":"7783985600"},
+  {"Rank":"ASI","Name":"Gauri Shankar","PNo":"230450330","District":"Balrampur","Unit":"SP BALRAMPUR","Mobile":"6306729802"},
+  {"Rank":"ASI","Name":"Mohit Chauhan","PNo":"230450343","District":"Aligarh","Unit":"ALIGARH","Mobile":"9355495132"},
+  {"Rank":"ASI","Name":"रविन्द्र कुमार","PNo":"230450356","District":"गाजियाबाद","Unit":"कमि० गाजियाबाद","Mobile":"9634854238"},
+  {"Rank":"ASI","Name":"अजय कुमार यादव","PNo":"230450369","District":"खीरी","Unit":"SP KHERI","Mobile":"9473623130"},
+  {"Rank":"ASI","Name":"चंद्रभान सिंह","PNo":"230450372","District":"Lucknow","Unit":"कमि० लखनऊ","Mobile":"9058677033"},
+  {"Rank":"ASI","Name":"आसिफ सिद्दीकी","PNo":"230450398","District":"Prayagraj","Unit":"कमि० प्रयागराज","Mobile":"8299006126"},
+  {"Rank":"ASI","Name":"धीरज कुमार पाण्डेय","PNo":"230450385","District":"Prayagraj","Unit":"कमि० प्रयागराज","Mobile":"9807063454"},
+  {"Rank":"ASI","Name":"अश्वनी कुमार भारती","PNo":"230450402","District":"बलरामपुर","Unit":"बलरामपुर","Mobile":"8299161583"},
+  {"Rank":"ASI","Name":"अतुल पाण्डेय","PNo":"230450415","District":"Knapur","Unit":"कमि० कानपुर","Mobile":"7379911241"},
+  {"Rank":"ASI","Name":"रोहितेश त्रिपाठी","PNo":"230450428","District":"चित्रकूट","Unit":"चित्रकूट","Mobile":"7275725800"},
+  {"Rank":"ASI","Name":"संजीत सिंह","PNo":"230450431","District":"Lucknow","Unit":"पुलिस मुख्यालय","Mobile":"9415879208"},
+  {"Rank":"ASI","Name":"Sudarshan Vishnoi","PNo":"230450444","District":"Shaharanpur","Unit":"Ssp Office","Mobile":"7088285186"},
+  {"Rank":"ASI","Name":"Hitkaran","PNo":"230450457","District":"Lucknow","Unit":"Police Headquarter Lucknow","Mobile":"9793955160"},
+  {"Rank":"ASI","Name":"नवोदित्य कुमार","PNo":"230450460","District":"Lucknow","Unit":"रेडियों मुख्यालय","Mobile":"8858020103"},
+  {"Rank":"ASI","Name":"अविषेक कुमार","PNo":"230450473","District":"महाराजगंज","Unit":"SP MAHARAJGANJ","Mobile":"9721498400"},
+  {"Rank":"ASI","Name":"मो० फैजी अख्तर","PNo":"230450486","District":"मथुरा","Unit":"Mathura","Mobile":"8475086163"},
+  {"Rank":"ASI","Name":"प्रमोद सिंह","PNo":"230450499","District":"झांसी","Unit":"SSP JHANSI","Mobile":"9977580298"},
+  {"Rank":"ASI","Name":"विशाल","PNo":"230450503","District":"गोण्डा","Unit":"SP GONDA","Mobile":"9170060264"},
+  {"Rank":"ASI","Name":"उत्कर्ष सिंह","PNo":"230450516","District":"खीरी","Unit":"SP KHERI","Mobile":"7668365131"},
+  {"Rank":"ASI","Name":"रजनीश","PNo":"230450529","District":"मुरादाबाद","Unit":"SSP MORADABAD","Mobile":"9769337295"},
+  {"Rank":"ASI","Name":"अनुभव रावत","PNo":"230450532","District":"फतेहपुर","Unit":"FATEHPUR","Mobile":"9044977539"},
+  {"Rank":"ASI","Name":"Amar Kumar","PNo":"230450545","District":"आगरा","Unit":"POLICE COMMISSIONERATE AGRA","Mobile":"8126474463"},
+  {"Rank":"ASI","Name":"Ravi Pratap","PNo":"230450558","District":"गोण्डा","Unit":"SP GONDA","Mobile":"9889722460"},
+  {"Rank":"ASI","Name":"Rakesh Kumar","PNo":"230450561","District":"खीरी","Unit":"Sp Office","Mobile":"8299360440"},
+  {"Rank":"ASI","Name":"Dashrath","PNo":"230450574","District":"कानपुर देहात","Unit":"SP KANPUR DEHAT","Mobile":"9381993089"},
+  {"Rank":"ASI","Name":"Ankit Srivastava","PNo":"230450587","District":"Lucknow","Unit":"पुलिस मुख्यालय","Mobile":"7007227395"},
+  {"Rank":"ASI","Name":"Vinay Kumar Singh","PNo":"230450590","District":"Gonda","Unit":"Sp Office Gonda","Mobile":"7055423423"},
+  {"Rank":"ASI","Name":"प्रवीण कुमार मिश्र","PNo":"230450604","District":"Lucknow","Unit":"UP FIRE AND EMERGENCY SERVICES","Mobile":"8948892389"},
+  {"Rank":"ASI","Name":"Vinay Kumar Bharti","PNo":"230450617","District":"Kanpur","Unit":"कमि० कानपुर","Mobile":"8853176248"},
+  {"Rank":"ASI","Name":"Sanjeev Kumar","PNo":"230450620","District":"Lucknow","Unit":"महिला एवं बाल","Mobile":"8756249108"},
+  {"Rank":"ASI","Name":"Pratyush Singh","PNo":"230450633","District":"अम्बेडकरनगर","Unit":"","Mobile":"7071717771"},
+  {"Rank":"ASI","Name":"Kaushal","PNo":"230450646","District":"","Unit":"उ०प्र० विशेष सुरक्षा","Mobile":"9792920801"},
+  {"Rank":"ASI","Name":"Vikram Pratap","PNo":"230450569","District":"Basti","Unit":"Basti Sp Office","Mobile":"8543030360"},
+  {"Rank":"ASI","Name":"Saurabh Mishra","PNo":"230450662","District":"Lucknow","Unit":"Lucknow Dgp Office","Mobile":"8887990433"},
+  {"Rank":"ASI","Name":"Indrajeet Kumar Patwa","PNo":"230450675","District":"सोनभद्र","Unit":"Sp Office","Mobile":"9711835560"},
+  {"Rank":"ASI","Name":"Yashdeep Jain","PNo":"230450688","District":"Agra","Unit":"POLICE COMMISSIONERATE AGRA","Mobile":"8400919269"},
+  {"Rank":"ASI","Name":"Sankalp Sukla","PNo":"230450691","District":"Lucknow","Unit":"32 BN PAC LUCKNOW","Mobile":"9984842782"},
+  {"Rank":"ASI","Name":"Kailash Kumar","PNo":"230450705","District":"Shamli","Unit":" SP SHAMLI","Mobile":"7055288499"},
+  {"Rank":"ASI","Name":"Sourabh Singh","PNo":"230450718","District":"Kasganj","Unit":"Sp Office","Mobile":"9017144211"},
+  {"Rank":"ASI","Name":"Jitendra Kumar","PNo":"230450721","District":"बलिया","Unit":"SP Baliya","Mobile":"9076739707"},
+  {"Rank":"ASI","Name":"अभिषेक गुप्ता","PNo":"230450734","District":"जालौन","Unit":"SP Jalaun","Mobile":"7237979292"},
+  {"Rank":"ASI","Name":"मिर्जा सनव्वर वेग","PNo":"230450747","District":"Lucknow","Unit":"पुलिस मुख्यालय","Mobile":"7398034499"},
+  {"Rank":"ASI","Name":"Ajeet Kumar Pal","PNo":"230450750","District":"Moradabad","Unit":"SP GRP MORADABAD","Mobile":"7860959811"},
+  {"Rank":"ASI","Name":"Deepak Maurya","PNo":"230450763","District":"Sitapur","Unit":"27 BN PAC SITAPUR","Mobile":"7234014627"},
+  {"Rank":"ASI","Name":"Mayank Dixit","PNo":"230450789","District":"Prayagaraj","Unit":"SP RAILWAY PRAYAGRAJ","Mobile":"7860518673"},
+  {"Rank":"ASI","Name":"रियाज पाशा","PNo":"230450792","District":"Etawah","Unit":"28 BN PAC ETAWAH","Mobile":"9719725308"},
+  {"Rank":"ASI","Name":"Shivam Vishwakarma","PNo":"230450819","District":"Etah","Unit":"Etah Ssp Office","Mobile":"8707641228"},
+  {"Rank":"ASI","Name":"Gulab Singh Malik","PNo":"230450835","District":"Aligarh","Unit":"Ssp Office Aligarh","Mobile":"7703868488"},
+  {"Rank":"ASI","Name":"Krishnanand Dubey","PNo":"230450851","District":"Prayagraj","Unit":"POLICE COMMISSIONERATE PRAYAGRAJ","Mobile":"8770849097"},
+  {"Rank":"ASI","Name":"Akhilesh Yadav","PNo":"230450981","District":"Prayagraj","Unit":"POLICE COMMISSIONERATE PRAYAGRAJ","Mobile":"8004509733"},
+  {"Rank":"ASI","Name":"Suraj Das Sharma","PNo":"230450994","District":"Siddhartnagar","Unit":"SP SIDDHARTH NAGAR","Mobile":"8765875491"},
+  {"Rank":"ASI","Name":"Shiv Kumar","PNo":"230451001","District":"Aligarh","Unit":"ALIGARH","Mobile":"9917116133"},
+  {"Rank":"ASI","Name":"Gaurav Khare","PNo":"230451027","District":"Agra","Unit":"POLICE COMMISSIONERATE AGRA","Mobile":"7007589849"},
+  {"Rank":"ASI","Name":"Irshad Ali","PNo":"230451030","District":"Sitapur","Unit":"SP SITAPUR","Mobile":"8299135548"},
+  {"Rank":"ASI","Name":"Tushar Mehra","PNo":"230451056","District":"Meeruth","Unit":"Pts Meerut","Mobile":"8353915350"},
+  {"Rank":"ASI","Name":"Abhay Kumar Gupta","PNo":"230451069","District":"Raebareli","Unit":"SP RAEBARELI","Mobile":"9026497626"},
+  {"Rank":"ASI","Name":"Digvijay Singh","PNo":"230451072","District":"Basti","Unit":"SP BASTI","Mobile":"7007599696"},
+  {"Rank":"ASI","Name":"Nitesh","PNo":"230451085","District":"Ghorakhpur","Unit":"SP RAILWAY GORAKHPUR","Mobile":"8738007159"},
+  {"Rank":"ASI","Name":"Surybhan Keshari","PNo":"230451098","District":"Prayagraj","Unit":"POLICE COMMISSIONERATE PRAYAGRAJ","Mobile":"9140380710"},
+  {"Rank":"ASI","Name":"Bilal Ahmad","PNo":"230451102","District":"Varanasi","Unit":"POLICE COMMISSIONERATE VARANASI","Mobile":"9792796474"},
+  {"Rank":"ASI","Name":"Mujeeb Raja","PNo":"230451115","District":"Pilibhit","Unit":"SP PILIBHIT","Mobile":"9927028781"},
+  {"Rank":"ASI","Name":"Kadir Hussain","PNo":"230451128","District":"Ghaziabad","Unit":"POLICE COMMISSIONERATE GHAZIABAD","Mobile":"9756041152"},
+  {"Rank":"ASI","Name":"Vikash Kumar","PNo":"230451144","District":"Ayodhya","Unit":"06 BN SSF AYODHYA","Mobile":"7052656207"},
+  {"Rank":"ASI","Name":"Amit Kumar Gupta","PNo":"230451157","District":"Moradabad","Unit":"Abhisuchna Vibhag","Mobile":"9807723119"},
+  {"Rank":"ASI","Name":"Dhanjay Kumar Mishra","PNo":"230451160","District":"Lucknow","Unit":"Suraksha Vibhag","Mobile":"7309436752"},
+  {"Rank":"ASI","Name":"Dhirendra Pratap Rao","PNo":"230451186","District":"Basti","Unit":"SP BASTI","Mobile":"8840794012"},
+  {"Rank":"ASI","Name":"Rabbu Hussain","PNo":"230451203","District":"Ghaziabad","Unit":"POLICE COMMISSIONERATE GHAZIABAD","Mobile":"9837057319"},
+  {"Rank":"ASI","Name":"Anand Tripathi","PNo":"230451216","District":"Lucknow","Unit":"STATE DISASTER RESPONSE FORCE UP","Mobile":"8787202255"},
+  {"Rank":"ASI","Name":"Yadvendra Yadav","PNo":"230450776","District":"Lucknow","Unit":"PHQ","Mobile":"8533938667"},
+  {"Rank":"ASI","Name":"Amit Yadav","PNo":"230450806","District":"Siddharth Nagar","Unit":"Sp Office","Mobile":"8576897676"},
+  {"Rank":"ASI","Name":"Vijay Kumar","PNo":"230450822","District":"Gazipur","Unit":"SP GHAZIPUR","Mobile":"8707618036"},
+  {"Rank":"ASI","Name":"Rajat Kumar","PNo":"230450848","District":"Hathras","Unit":"HATHRAS","Mobile":"9997111702"},
+  {"Rank":"ASI","Name":"Dinesh Patel","PNo":"230450864","District":"Sitapur","Unit":"SP SITAPUR","Mobile":"7800257213"},
+  {"Rank":"ASI","Name":"Satveer Singh Yadav","PNo":"230450880","District":"Etawah","Unit":"28 BN PAC ETAWAH","Mobile":"8860394597"},
+  {"Rank":"ASI","Name":"Vishal Chandra Pandey","PNo":"230450877","District":"Prayagraj","Unit":"GRP Prayagraj","Mobile":"8009200641"},
+  {"Rank":"ASI","Name":"Pradeep Kumar","PNo":"230450893","District":"Lucknow","Unit":"INTELLIGENCE HQRS UP LUCKNOW","Mobile":"8896982371"},
+  {"Rank":"ASI","Name":"Rahul","PNo":"230450907","District":"Mathura","Unit":"MATHURA","Mobile":"8743954053"},
+  {"Rank":"ASI","Name":"Himanshu Sharma","PNo":"230450910","District":"Hapur","Unit":"SP HAPUD","Mobile":"9690007879"},
+  {"Rank":"ASI","Name":"Sachin Gupta","PNo":"230450923","District":"Agra","Unit":"POLICE COMMISSIONERATE AGRA","Mobile":"8269819841"},
+  {"Rank":"ASI","Name":"Abhilash Shukla","PNo":"230450936","District":"Sitapur","Unit":"District","Mobile":"8795005135"},
+  {"Rank":"ASI","Name":"Roshan Prasad","PNo":"230450949","District":"GORAKHPUR","Unit":"SSP GORAKHPUR","Mobile":"8896567962"},
+  {"Rank":"ASI","Name":"Manoj Gautam","PNo":"230450952","District":"Lucknow","Unit":"Lucknow Commissionerate","Mobile":"8299053968"},
+  {"Rank":"ASI","Name":"Puspendra Vishwakarma","PNo":"230450965","District":"SONBHADRA","Unit":"48 BN PAC SONBHADRA","Mobile":"8858932420"},
+  {"Rank":"ASI","Name":"Naveen Kumar Soni","PNo":"230450978","District":"Lucknow","Unit":"Phq","Mobile":"7607134144"},
+  {"Rank":"ASI","Name":"Nikhil Pandey","PNo":"230451014","District":"Lucknow","Unit":"Phq","Mobile":"9044968843"},
+  {"Rank":"ASI","Name":"Shakti Malik","PNo":"230451043","District":"Ghaziabad","Unit":"Commissionerate","Mobile":"7078792782"},
+  {"Rank":"ASI","Name":"Prashant Selke","PNo":"230451867","District":"Hamirpur","Unit":"Hamirpur","Mobile":"9522126990"},
+  {"Rank":"ASI","Name":"Veer Bahadur","PNo":"230451131","District":"Lucknow","Unit":"Commissionerate","Mobile":"9559745540"},
+  {"Rank":"ASI","Name":"Md. Danish","PNo":"230451199","District":"ALIGARH","Unit":"45 BN PAC ALIGARH","Mobile":"8799339195"},
+  {"Rank":"ASI","Name":"Ajay Kumar Updhay","PNo":"230451229","District":"Baliya","Unit":"SP BALLIA","Mobile":"9161751429"},
+  {"Rank":"ASI","Name":"Abhinesh Amar","PNo":"230451232","District":"Lucknow","Unit":"Commissionerate","Mobile":"7376161271"},
+  {"Rank":"ASI","Name":"Shubham Kumar","PNo":"230451245","District":"Ghaziabad","Unit":"Commissionerate","Mobile":"9027525852"},
+  {"Rank":"ASI","Name":"Aman Kumar","PNo":"230451258","District":"Prayagraj","Unit":"Commissionerate","Mobile":"7985271558"},
+  {"Rank":"ASI","Name":"Akhil Prajapati","PNo":"230451261","District":"Bareli","Unit":"SSP BAREILLY","Mobile":"7858187108"},
+  {"Rank":"ASI","Name":"Lotan Singh","PNo":"230451274","District":"Bareli","Unit":"SSP BAREILLY","Mobile":"8285269624"},
+  {"Rank":"ASI","Name":"Naved Alam","PNo":"230451287","District":"Aligarh","Unit":"ALIGARH","Mobile":"9760779213"},
+  {"Rank":"ASI","Name":"Rohit Kumar","PNo":"230451290","District":"Bareli","Unit":"SSP BAREILLY","Mobile":"9012325301"},
+  {"Rank":"ASI","Name":"Amit","PNo":"230451304","District":"Badaun","Unit":"Ssp Office","Mobile":"8653037013"},
+  {"Rank":"ASI","Name":"Anand Kumar","PNo":"230451317","District":"Prayagraj","Unit":"03 BN SSF PRAYAGRAJ","Mobile":"7007254399"},
+  {"Rank":"ASI","Name":"Sunil Kumar","PNo":"230451320","District":"Varanasi","Unit":"Commissionerate","Mobile":"9415068608"},
+  {"Rank":"ASI","Name":"Harimohan","PNo":"230451333","District":"Gazipur","Unit":"GHAZIPUR","Mobile":"8115520311"},
+  {"Rank":"ASI","Name":"Vivek Sharma","PNo":"230451346","District":"Saharanpur","Unit":"Ssp Office Saharanpur","Mobile":"9756322724"},
+  {"Rank":"ASI","Name":"Shubham Mishra","PNo":"230451883","District":"Ghorakhpur","Unit":"SSP GORAKHPUR","Mobile":"9369103153"},
+  {"Rank":"ASI","Name":"Naveen Srivastav","PNo":"230451359","District":"Lucknow","Unit":"Commissionerate","Mobile":"8081337474"},
+  {"Rank":"ASI","Name":"Shashank","PNo":"230451362","District":"Varanasi","Unit":"Commissionerate","Mobile":"9454000226"},
+  {"Rank":"ASI","Name":"Akash Bharti","PNo":"230451375","District":"Ghorakhpur","Unit":"SSP GORAKHPUR","Mobile":"8726102051"},
+  {"Rank":"ASI","Name":"Aditya Singh","PNo":"230451388","District":"Ghorakhpur","Unit":"SSP GORAKHPUR","Mobile":"8545919418"},
+  {"Rank":"ASI","Name":"Ajay Kumar","PNo":"230451391","District":"Sambbhal","Unit":"SP SAMBHAL","Mobile":"9058315335"},
+  {"Rank":"ASI","Name":"Vivek Kumar Kasyap","PNo":"230451405","District":"Ghorakhpur","Unit":"SSP GORAKHPUR","Mobile":"7985244650"},
+  {"Rank":"ASI","Name":"Mithlesh Pal","PNo":"230451418","District":"Gazipur","Unit":"SP GHAZIPUR","Mobile":"9411983984"},
+  {"Rank":"ASI","Name":"Vinod Kumar","PNo":"230451421","District":"Sabbhal","Unit":"SP SAMBHAL","Mobile":"8901024584"},
+  {"Rank":"ASI","Name":"Abhishek Pandey","PNo":"230451870","District":"AYODHYA","Unit":"06 BN SSF AYODHYA","Mobile":"7310389506"},
+  {"Rank":"ASI","Name":"Om Prakash Tiwari","PNo":"230451434","District":"Shahjahanpur","Unit":"SP SHAHJAHANPUR","Mobile":"8269845516"},
+  {"Rank":"ASI","Name":"Shiv Om","PNo":"230451447","District":"Muzaffarnagar","Unit":"SSP MUZAFFAR NAGAR","Mobile":"6395233387"},
+  {"Rank":"ASI","Name":"Ankit Goswami","PNo":"230451450","District":"Lucknow","Unit":"01BN SSF LUCKNOW","Mobile":"8765898937"},
+  {"Rank":"ASI","Name":"Rahulendra Gautam","PNo":"230451463","District":"ETAH","Unit":"43 BN PAC ETAH","Mobile":"8127617584"},
+  {"Rank":"ASI","Name":"Anurag Kumar Pandey","PNo":"230451476","District":"Shravasti","Unit":"SP SHRAVASTI","Mobile":"9918023856"},
+  {"Rank":"ASI","Name":"Deepak Pal","PNo":"230451489","District":"Lucknow","Unit":"Technical Services PHQ","Mobile":"9573917075"},
+  {"Rank":"ASI","Name":"Akash Bajpai","PNo":"230451492","District":"Moradabad","Unit":"SSP MORADABAD","Mobile":"7524072895"},
+  {"Rank":"ASI","Name":"Gyanesh Pathak","PNo":"230451506","District":"Varanasi","Unit":"Commissionerate","Mobile":"7860283534"},
+  {"Rank":"ASI","Name":"Vineet Kumar Singh","PNo":"230451519","District":"Chandauli","Unit":"SP CHANDAULI","Mobile":"9415470769"},
+  {"Rank":"ASI","Name":"Tinku Shrivas","PNo":"230451522","District":"Unnao","Unit":"SP UNNAO","Mobile":"8576045076"},
+  {"Rank":"ASI","Name":"Vikash Sharma","PNo":"230451535","District":"Hamirpur","Unit":"Sp Office Hamirpur","Mobile":"7400522749"},
+  {"Rank":"ASI","Name":"Nikhil Chaudhary","PNo":"230451548","District":"Moradabad","Unit":"SSP MORADABAD","Mobile":"9719111929"},
+  {"Rank":"ASI","Name":"Durgesh Kajla","PNo":"230451551","District":"Bijnor","Unit":"SP BIJNOR","Mobile":"9979848500"},
+  {"Rank":"ASI","Name":"Anuj Kumar Verma","PNo":"230451564","District":"Lucknow","Unit":"Commissionerate","Mobile":"8318435601"},
+  {"Rank":"ASI","Name":"Shivam Kumar","PNo":"230451593","District":"Lucknow","Unit":"PHQ","Mobile":"6388851861"},
+  {"Rank":"ASI","Name":"Jaspal Singh","PNo":"230451577","District":"Firozabad","Unit":"SSP OFFICE FIROZABAD","Mobile":"8191857282"},
+  {"Rank":"ASI","Name":"Rahul Mishra","PNo":"230451580","District":"Lucknow","Unit":"02 BN PAC SITAPUR","Mobile":"9044993606"},
+  {"Rank":"ASI","Name":"Mohit Kumar","PNo":"230451607","District":"Moradabad","Unit":"SSP MORADABAD","Mobile":"7827938588"},
+  {"Rank":"ASI","Name":"Aviral Chaudhary","PNo":"230451610","District":"Lucknow","Unit":"WOMEN POWER LINE 1090","Mobile":"8423538266"},
+  {"Rank":"ASI","Name":"DEVESH KUMAR PANDEY","PNo":"230451623","District":"Ghorakhpur","Unit":"SSP GORAKHPUR","Mobile":"9919905165"},
+  {"Rank":"ASI","Name":"Rahul Kumar","PNo":"230451636","District":"Auraya","Unit":"SP AURAIYA","Mobile":"8858703522"},
+  {"Rank":"ASI","Name":"Tarun Kumar","PNo":"230451649","District":"Moradabad","Unit":"SSP MORADABAD","Mobile":"8958869849"},
+  {"Rank":"ASI","Name":"Musrar Ahmad","PNo":"230451652","District":"Meeruth","Unit":"SSP MEERUT","Mobile":"7454086786"},
+  {"Rank":"ASI","Name":"Dharmendra Pal","PNo":"230451665","District":"Muzaffarnagar","Unit":"SSP MUZAFFAR NAGAR","Mobile":"9045252052"},
+  {"Rank":"ASI","Name":"Manoj Tiwari","PNo":"230451678","District":"Ayodhya","Unit":"SSP AYODHYA","Mobile":"8299373055"},
+  {"Rank":"ASI","Name":"Gaurav Rao","PNo":"230451681","District":"Sonbhadra","Unit":"48bn India Reserve Sonbhadra","Mobile":"9400467007"},
+  {"Rank":"ASI","Name":"Sonu","PNo":"230451694","District":"Moradabad","Unit":"PTC II MORADABAD","Mobile":"9279758073"},
+  {"Rank":"ASI","Name":"Surjeet Gupta","PNo":"230451708","District":"Raebareli","Unit":"25 BN PAC RAEBARELI","Mobile":"8175977260"},
+  {"Rank":"ASI","Name":"Vikas Kumar Singh","PNo":"230451711","District":"Ghorakhpur","Unit":"SSP GORAKHPUR","Mobile":"8145982138"},
+  {"Rank":"ASI","Name":"Rituraj Singh Yadav","PNo":"230451724","District":"Ghorakhpur","Unit":"GRP Gorakhpur","Mobile":"9336283182"},
+  {"Rank":"ASI","Name":"Rohit","PNo":"230451737","District":"Mainpuri","Unit":"SP OFFICE MAINPURI","Mobile":"7007709165"},
+  {"Rank":"ASI","Name":"Rakesh Kumar Rathore","PNo":"230451740","District":"Raebareli","Unit":"SP RAEBARELI","Mobile":"9559309569"},
+  {"Rank":"ASI","Name":"Ayush Kaushik","PNo":"230451753","District":"Rampur","Unit":"Ssp Office Rampur","Mobile":"9045697308"},
+  {"Rank":"ASI","Name":"Ankit Kumar Gaud","PNo":"230451766","District":"Azamgarh","Unit":"SP AZAMGARH","Mobile":"7678816591"},
+  {"Rank":"ASI","Name":"SAGAR UPADHYAY","PNo":"230451779","District":"Etawah","Unit":"SSP ETAWAH","Mobile":"8808820098"},
+  {"Rank":"ASI","Name":"Shivpal Singh Tomar","PNo":"230451782","District":"Sitapur","Unit":"SP SITAPUR","Mobile":"9406563664"},
+  {"Rank":"ASI","Name":"Utkarsh Anand","PNo":"230451795","District":"Lucknow","Unit":"UP FIRE AND EMERGENCY SERVICES","Mobile":"9026213362"},
+  {"Rank":"ASI","Name":"Dhanjay","PNo":"230451809","District":"Chandauli","Unit":"SP CHANDAULI","Mobile":"7905300521"},
+  {"Rank":"ASI","Name":"Shushil Kumar Singh","PNo":"230451812","District":"Mahoba","Unit":"","Mobile":"8172914768"},
+  {"Rank":"ASI","Name":"Vikash Kasyap","PNo":"230451825","District":"Jaunpur","Unit":"SP JAUNPUR","Mobile":"77858/8338"},
+  {"Rank":"ASI","Name":"Anurag Chaudhary","PNo":"230451838","District":"","Unit":"Pac","Mobile":"7053864640"},
+  {"Rank":"ASI","Name":"Dharmendra","PNo":"230451854","District":"Rampur","Unit":"","Mobile":"7300555440"},
+  {"Rank":"ASI","Name":"Satya Prakash","PNo":"230451854","District":"Azamgarh","Unit":"Sp Office","Mobile":"9919310327"}
+];
 
-  // DOM Elements
-  const authSection = document.getElementById('authSection');
-  const appSection = document.getElementById('appSection');
-  const taskList = document.getElementById('taskList');
-  const authStatus = document.getElementById('authStatus');
+const districtSelect = document.getElementById("districtSelect");
+const rankSelect = document.getElementById("rankSelect");
+const searchBox = document.getElementById("searchBox");
+const showListBtn = document.getElementById("showListBtn");
+const result = document.getElementById("result");
+const message = document.getElementById("message");
 
-  let currentTab = 'all';
+// Populate Distinct District Options
+const uniqueDistricts = [...new Set(employees.map(emp => emp.District).filter(d=>d && d!==''))].sort((a,b) => a.localeCompare(b,'hi'));
+uniqueDistricts.forEach(district => {
+  const option = document.createElement("option");
+  option.value = district;
+  option.textContent = district;
+  districtSelect.appendChild(option);
+});
 
-  // Auth State Listener
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      authSection.style.display = 'none';
-      appSection.style.display = 'block';
-      loadTasks();
-    } else {
-      authSection.style.display = 'block';
-      appSection.style.display = 'none';
-    }
+// Populate Distinct Rank Options
+const uniqueRanks = [...new Set(employees.map(emp => emp.Rank).filter(r=>r && r!==''))].sort((a,b) => a.localeCompare(b,'hi'));
+uniqueRanks.forEach(rank => {
+  const option = document.createElement("option");
+  option.value = rank;
+  option.textContent = rank;
+  rankSelect.appendChild(option);
+});
+
+function createEmployeeCard(emp) {
+  const card = document.createElement("div");
+  card.className = "police-card";
+  card.innerHTML = `
+    <div class="name">${emp.Name}</div>
+    <div class="row"><span class="label">Rank: </span>${emp.Rank}</div>
+    <div class="row"><span class="label">PNo: </span><a href="http://45.64.159.163/uppolice/login/hc/detail.php?id=${emp.PNo}" target="_blank" class="pno-link" rel="noopener noreferrer">${emp.PNo}</a></div>
+    <div class="row"><span class="label">Posting District: </span>${emp.District}</div>
+    <div class="row"><span class="label">Allotted Unit: </span>${emp.Unit}</div>
+    <div class="row"><span class="label">Mobile: </span>${emp.Mobile}</div>
+  `;
+  return card;
+}
+
+function filterAndDisplay() {
+  let districtFilter = districtSelect.value.trim();
+  let rankFilter = rankSelect.value.trim();
+  let searchText = searchBox.value.trim().toLowerCase();
+
+  if (!districtFilter) {
+    result.innerHTML = "";
+    message.textContent = "कृपया जनपद चुनें।";
+    return;
+  }
+
+  let filtered = employees.filter(emp => {
+    let matchesDistrict = emp.District === districtFilter;
+    let matchesRank = rankFilter ? emp.Rank === rankFilter : true;
+    let matchesSearch = searchText ? (
+      emp.Name.toLowerCase().includes(searchText) || 
+      emp.PNo.toLowerCase().includes(searchText) || 
+      emp.Mobile.toLowerCase().includes(searchText)
+    ) : true;
+    return matchesDistrict && matchesRank && matchesSearch;
   });
 
-  // Register User
-  function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(() => authStatus.innerText = "सफलतापूर्वक साइन अप किया गया!")
-      .catch(err => authStatus.innerText = "त्रुटि: " + err.message);
-  }
-
-  // Login User
-  function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    auth.signInWithEmailAndPassword(email, password)
-      .catch(err => authStatus.innerText = "त्रुटि: " + err.message);
-  }
-
-  // Logout
-  function logout() {
-    auth.signOut();
-  }
-
-  // Add Task
-  function addTask() {
-    const title = document.getElementById('taskTitle').value;
-    const desc = document.getElementById('taskDesc').value;
-    const priority = document.getElementById('priority').value;
-    const user = auth.currentUser;
-
-    if (!title || !user) return;
-
-    db.collection('tasks').add({
-      userId: user.uid,
-      title,
-      description: desc,
-      priority,
-      completed: false,
-      createdAt: new Date(),
-      completedAt: null
-    }).then(() => {
-      document.getElementById('taskTitle').value = '';
-      document.getElementById('taskDesc').value = '';
-      loadTasks();
+  result.innerHTML = "";
+  if (filtered.length === 0) {
+    message.textContent = "कोई कर्मचारी डेटा उपलब्ध नहीं है। कृपया अन्य विकल्प चुनें।";
+  } else {
+    message.textContent = "";
+    const cardArea = document.createElement("div");
+    cardArea.className = "cards-area";
+    filtered.forEach(emp => {
+      cardArea.appendChild(createEmployeeCard(emp));
     });
+    result.appendChild(cardArea);
   }
+}
 
-  // Load Tasks
-  function loadTasks() {
-    const user = auth.currentUser;
-    db.collection('tasks')
-      .where('userId', '==', user.uid)
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(snapshot => {
-        taskList.innerHTML = '';
-        snapshot.forEach(doc => {
-          const task = doc.data();
-          if ((currentTab === 'pending' && task.completed) ||
-              (currentTab === 'completed' && !task.completed)) return;
+showListBtn.onclick = filterAndDisplay;
+districtSelect.onchange = filterAndDisplay;
+rankSelect.onchange = filterAndDisplay;
+searchBox.oninput = () => { if(searchBox.value.length === 0) filterAndDisplay(); };
 
-          const taskEl = document.createElement('div');
-          taskEl.className = `task-card ${task.priority === 'High' ? 'high' : ''} ${task.completed ? 'completed' : ''}`;
-          taskEl.innerHTML = `
-            <strong>${task.title}</strong>
-            ${task.description ? `<p>${task.description}</p>` : ''}
-            <div>प्राथमिकता: ${task.priority}</div>
-            <div class="timestamp">
-              जोड़ा गया: ${task.createdAt?.toDate().toLocaleString('hi-IN')}
-              ${task.completedAt ? `<br>पूर्ण: ${task.completedAt.toDate().toLocaleString('hi-IN')}` : ''}
-            </div>
-            ${!task.completed ? `<button onclick="completeTask('${doc.id}')">पूर्ण करें</button>` : ''}
-          `;
-          taskList.appendChild(taskEl);
-        });
-      });
-  }
-
-  // Complete Task
-  function completeTask(id) {
-    db.collection('tasks').doc(id).update({
-      completed: true,
-      completedAt: new Date()
-    });
-  }
-
-  // Tab Switching
-  function showTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    loadTasks();
-  }
 </script>
-
 </body>
 </html>
