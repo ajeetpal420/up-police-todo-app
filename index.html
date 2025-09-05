@@ -1,4 +1,163 @@
-const firebaseConfig = {
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UP Police कार्य प्रबंधन प्रणाली</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f0f5ff, #e0e7ff);
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 100, 0.1);
+      border: 1px solid #0056b3;
+    }
+    header {
+      text-align: center;
+      padding: 15px;
+      background: #003366;
+      color: white;
+      border-radius: 10px 10px 0 0;
+      margin: -20px -20px 20px -20px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .logo {
+      width: 80px;
+      margin-bottom: 10px;
+    }
+    .auth-section, .app-section {
+      text-align: center;
+    }
+    input, button, select {
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 80%;
+      max-width: 300px;
+    }
+    button {
+      background: #d42323;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #b01c1c;
+    }
+    .task-card {
+      padding: 12px;
+      margin: 10px 0;
+      background: #f8f9ff;
+      border-left: 5px solid #0056b3;
+      border-radius: 6px;
+      text-align: left;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .task-card.high {
+      border-left-color: #d42323;
+    }
+    .task-card.completed {
+      background: #e8f5e8;
+      opacity: 0.8;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #555;
+      font-size: 14px;
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .tab {
+      padding: 10px 20px;
+      margin: 0 5px;
+      background: #e0e7ff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: #003366;
+      color: white;
+    }
+    .logout {
+      background: #6c757d !important;
+    }
+    .timestamp {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Emblem_of_Uttar_Pradesh.svg/1200px-Emblem_of_Uttar_Pradesh.svg.png" alt="UP Police Logo" class="logo" />
+    <h1>उत्तर प्रदेश पुलिस - कार्य प्रबंधन प्रणाली</h1>
+  </header>
+
+  <!-- Authentication Section -->
+  <div id="authSection" class="auth-section">
+    <h2>कर्मचारी लॉगिन / साइन अप</h2>
+    <input type="email" id="email" placeholder="ईमेल (आईडी)" />
+    <input type="password" id="password" placeholder="पासवर्ड" />
+    <button onclick="register()">साइन अप</button>
+    <button onclick="login()">लॉगिन</button>
+    <p id="authStatus"></p>
+  </div>
+
+  <!-- App Section (Hidden until login) -->
+  <div id="appSection" class="app-section" style="display: none;">
+    <h2>नया कार्य जोड़ें</h2>
+    <input type="text" id="taskTitle" placeholder="कार्य का शीर्षक" />
+    <input type="text" id="taskDesc" placeholder="विवरण (वैकल्पिक)" />
+    <select id="priority">
+      <option value="Low">कम प्राथमिकता</option>
+      <option value="Medium">मध्यम प्राथमिकता</option>
+      <option value="High">उच्च प्राथमिकता</option>
+    </select>
+    <button onclick="addTask()">कार्य जोड़ें</button>
+    <button class="logout" onclick="logout()">लॉग आउट</button>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('all')">सभी कार्य</button>
+      <button class="tab" onclick="showTab('pending')">लंबित कार्य</button>
+      <button class="tab" onclick="showTab('completed')">पूर्ण कार्य</button>
+    </div>
+
+    <div id="taskList"></div>
+  </div>
+
+  <div class="footer">
+    © 2025 UP Police - डिजिटल कार्य प्रबंधन प्रणाली। केवल आंतरिक उपयोग के लिए।
+  </div>
+</div>
+
+<script>
+  // Firebase Configuration (Replace with your own Firebase project)
+  const firebaseConfig = {
   apiKey: "AIzaSyCcfFVoG6ixSCzHWJ_aEofa6l89lQy0IdM",
   authDomain: "up-police-todo-app.firebaseapp.com",
   projectId: "up-police-todo-app",
@@ -6,3 +165,124 @@ const firebaseConfig = {
   messagingSenderId: "772303355094",
   appId: "1:772303355094:web:a73f897b17a08d82649d77"
 };
+  
+// Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // DOM Elements
+  const authSection = document.getElementById('authSection');
+  const appSection = document.getElementById('appSection');
+  const taskList = document.getElementById('taskList');
+  const authStatus = document.getElementById('authStatus');
+
+  let currentTab = 'all';
+
+  // Auth State Listener
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      authSection.style.display = 'none';
+      appSection.style.display = 'block';
+      loadTasks();
+    } else {
+      authSection.style.display = 'block';
+      appSection.style.display = 'none';
+    }
+  });
+
+  // Register User
+  function register() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(() => authStatus.innerText = "सफलतापूर्वक साइन अप किया गया!")
+      .catch(err => authStatus.innerText = "त्रुटि: " + err.message);
+  }
+
+  // Login User
+  function login() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(err => authStatus.innerText = "त्रुटि: " + err.message);
+  }
+
+  // Logout
+  function logout() {
+    auth.signOut();
+  }
+
+  // Add Task
+  function addTask() {
+    const title = document.getElementById('taskTitle').value;
+    const desc = document.getElementById('taskDesc').value;
+    const priority = document.getElementById('priority').value;
+    const user = auth.currentUser;
+
+    if (!title || !user) return;
+
+    db.collection('tasks').add({
+      userId: user.uid,
+      title,
+      description: desc,
+      priority,
+      completed: false,
+      createdAt: new Date(),
+      completedAt: null
+    }).then(() => {
+      document.getElementById('taskTitle').value = '';
+      document.getElementById('taskDesc').value = '';
+      loadTasks();
+    });
+  }
+
+  // Load Tasks
+  function loadTasks() {
+    const user = auth.currentUser;
+    db.collection('tasks')
+      .where('userId', '==', user.uid)
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(snapshot => {
+        taskList.innerHTML = '';
+        snapshot.forEach(doc => {
+          const task = doc.data();
+          if ((currentTab === 'pending' && task.completed) ||
+              (currentTab === 'completed' && !task.completed)) return;
+
+          const taskEl = document.createElement('div');
+          taskEl.className = `task-card ${task.priority === 'High' ? 'high' : ''} ${task.completed ? 'completed' : ''}`;
+          taskEl.innerHTML = `
+            <strong>${task.title}</strong>
+            ${task.description ? `<p>${task.description}</p>` : ''}
+            <div>प्राथमिकता: ${task.priority}</div>
+            <div class="timestamp">
+              जोड़ा गया: ${task.createdAt?.toDate().toLocaleString('hi-IN')}
+              ${task.completedAt ? `<br>पूर्ण: ${task.completedAt.toDate().toLocaleString('hi-IN')}` : ''}
+            </div>
+            ${!task.completed ? `<button onclick="completeTask('${doc.id}')">पूर्ण करें</button>` : ''}
+          `;
+          taskList.appendChild(taskEl);
+        });
+      });
+  }
+
+  // Complete Task
+  function completeTask(id) {
+    db.collection('tasks').doc(id).update({
+      completed: true,
+      completedAt: new Date()
+    });
+  }
+
+  // Tab Switching
+  function showTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    loadTasks();
+  }
+</script>
+
+</body>
+</html>
